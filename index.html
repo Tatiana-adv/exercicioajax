@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cadastro com Ajax</title>
+    <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+
+    <main class="container">
+        <h1>Cadastre-se</h1>
+        <p>Preencha os dados para criar sua conta.</p>
+
+        <div id="form-status"></div>
+
+        <form id="registration-form" novalidate>
+            <div class="form-group">
+                <label for="fullName">Nome Completo</label>
+                <input type="text" id="fullName" name="fullName" required>
+                <span class="error-message" aria-live="polite"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="email">E-mail</label>
+                <input type="email" id="email" name="email" required>
+                <span class="error-message" aria-live="polite"></span>
+            </div>
+
+            <div class="form-group">
+                <label for="password">Senha</label>
+                <input type="password" id="password" name="password" required minlength="8">
+                <span class="error-message" aria-live="polite"></span>
+            </div>
+
+            <div class="form-group">
+                <button type="submit" id="submit-button">Registrar</button>
+            </div>
+        </form>
+    </main>
+
+    <script src="js/main.js" defer></script>
+</body>
+</html>
