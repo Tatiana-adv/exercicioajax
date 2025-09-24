@@ -1,0 +1,12 @@
+// Exemplo com jQuery (requer que a biblioteca jQuery esteja incluída no HTML)
+function sendDataToServerJQuery(data) {
+    return $.ajax({
+        url: 'https://sua-api.com/register',
+        type: 'POST',
+        contentType: 'application/json',
+        data: JSON.stringify(data)
+    }); // jQuery.ajax já retorna uma Promise!
+}
+
+// O uso dentro do try/catch seria:
+// const response = await sendDataToServerJQuery(data);
