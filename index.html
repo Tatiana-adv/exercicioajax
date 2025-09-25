@@ -3,42 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cadastro com Ajax</title>
+    <title>Buscador de Perfil do GitHub</title>
     <link rel="stylesheet" href="css/style.css">
 </head>
 <body>
 
     <main class="container">
-        <h1>Cadastre-se</h1>
-        <p>Preencha os dados para criar sua conta.</p>
-
-        <div id="form-status"></div>
-
-        <form id="registration-form" novalidate>
-            <div class="form-group">
-                <label for="fullName">Nome Completo</label>
-                <input type="text" id="fullName" name="fullName" required>
-                <span class="error-message" aria-live="polite"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="email">E-mail</label>
-                <input type="email" id="email" name="email" required>
-                <span class="error-message" aria-live="polite"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="password">Senha</label>
-                <input type="password" id="password" name="password" required minlength="8">
-                <span class="error-message" aria-live="polite"></span>
-            </div>
-
-            <div class="form-group">
-                <button type="submit" id="submit-button">Registrar</button>
-            </div>
-        </form>
+        <h1>Buscador de Perfis do GitHub</h1>
+        <div class="search-container">
+            <input type="text" id="username-input" placeholder="Digite um usuário do GitHub...">
+            <button id="search-button">Buscar</button>
+        </div>
+        
+        <div id="profile-container">
+            <p class="initial-message">Digite um nome de usuário e clique em "Buscar" para ver as informações do perfil.</p>
+        </div>
     </main>
 
-    <script src="js/main.js" defer></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
