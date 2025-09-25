@@ -1,144 +1,90 @@
-// Aguarda o DOM estar completamente carregado antes de executar o script.
+// Aguarda o carregamento completo do DOM para garantir que todos os elementos existam.
 document.addEventListener('DOMContentLoaded', () => {
-    // Seleciona os elementos do formulário com os quais vamos interagir.
-    const form = document.getElementById('registration-form');
-    const submitButton = document.getElementById('submit-button');
-    const formStatus = document.getElementById('form-status');
 
-    // Adiciona um ouvinte de evento para o envio do formulário.
-    form.addEventListener('submit', async (event) => {
-        // 1. Previne o comportamento padrão do formulário (que é recarregar a página).
-        event.preventDefault();
+    // 1. Seleciona os elementos da página com os quais vamos trabalhar.
+    const searchButton = document.getElementById('search-button');
+    const usernameInput = document.getElementById('username-input');
+    const profileContainer = document.getElementById('profile-container');
 
-        // Limpa mensagens de erro e status anteriores.
-        clearErrors();
-        formStatus.style.display = 'none';
+    // Adiciona o evento de clique ao botão de busca.
+    searchButton.addEventListener('click', () => {
+        // Pega o nome de usuário digitado no campo de input, removendo espaços em branco.
+        const username = usernameInput.value.trim();
 
-        // 2. Validação dos campos do formulário no lado do cliente (front-end).
-        const isValid = validateForm();
-        if (!isValid) {
-            return; // Interrompe a execução se a validação falhar.
-        }
-
-        // 3. Feedback visual para o usuário: estado de carregamento.
-        submitButton.disabled = true;
-        submitButton.textContent = 'Enviando...';
-
-        // 4. Estrutura try...catch...finally para lidar com a requisição Ajax.
-        try {
-            // Coleta os dados do formulário.
-            const formData = new FormData(form);
-            const data = Object.fromEntries(formData.entries());
-
-            // 5. Realiza a requisição com a Fetch API.
-            // A função 'sendDataToServer' simula uma chamada de API.
-            const response = await sendDataToServer(data);
-            
-            // Exibe a mensagem de sucesso retornada pelo "servidor".
-            showStatusMessage(response.message, 'success');
-            form.reset(); // Limpa o formulário após o sucesso.
-
-        } catch (error) {
-            // 6. Captura qualquer erro (de rede ou da aplicação) e exibe uma mensagem.
-            showStatusMessage(error.message, 'error');
-            console.error('Erro no envio do formulário:', error);
-
-        } finally {
-            // 7. Bloco 'finally' sempre será executado, restaurando o botão.
-            submitButton.disabled = false;
-            submitButton.textContent = 'Registrar';
+        // Verifica se o campo não está vazio antes de fazer a chamada.
+        if (username) {
+            fetchGithubUser(username);
+        } else {
+            // Informa ao usuário que ele precisa digitar algo.
+            profileContainer.innerHTML = '<p class="error-message">Por favor, digite um nome de usuário.</p>';
         }
     });
 
     /**
-     * Função que valida os campos do formulário.
-     * @returns {boolean} - Retorna true se todos os campos forem válidos, senão false.
+     * Função assíncrona para buscar os dados do usuário na API do GitHub.
+     * Esta é a requisição Ajax que a tarefa pede.
+     * @param {string} username - O nome de usuário do GitHub a ser buscado.
      */
-    function validateForm() {
-        let valid = true;
-        const fullName = document.getElementById('fullName');
-        const email = document.getElementById('email');
-        const password = document.getElementById('password');
+    async function fetchGithubUser(username) {
+        // URL da API do GitHub para buscar um usuário específico.
+        const apiUrl = `https://api.github.com/users/${username}`;
 
-        // Validação do nome completo
-        if (fullName.value.trim() === '') {
-            showError(fullName, 'O nome completo é obrigatório.');
-            valid = false;
+        // Feedback visual: informa ao usuário que os dados estão sendo carregados.
+        profileContainer.innerHTML = '<p class="loading-message">Carregando...</p>';
+
+        // Bloco try...catch para tratar sucessos e erros na requisição.
+        try {
+            // 2. Realiza a chamada para a API usando fetch e aguarda a resposta.
+            const response = await fetch(apiUrl);
+
+            // 3. Verifica se a resposta da API foi bem-sucedida (status 200-299).
+            // Se o usuário não for encontrado, a API retorna um status 404.
+            if (!response.ok) {
+                if (response.status === 404) {
+                    throw new Error('Usuário não encontrado.');
+                } else {
+                    throw new Error('Ocorreu um erro ao buscar o perfil.');
+                }
+            }
+
+            // Converte a resposta em formato JSON.
+            const userData = await response.json();
+
+            // 4. Chama a função para exibir os dados na tela.
+            displayUserProfile(userData);
+
+        } catch (error) {
+            // Em caso de erro (rede, usuário não encontrado, etc.), exibe a mensagem de erro.
+            profileContainer.innerHTML = `<p class="error-message">Erro: ${error.message}</p>`;
+            console.error('Falha na requisição:', error);
         }
-
-        // Validação do email
-        if (email.value.trim() === '') {
-            showError(email, 'O e-mail é obrigatório.');
-            valid = false;
-        } else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.value)) {
-            showError(email, 'Por favor, insira um e-mail válido.');
-            valid = false;
-        }
-
-        // Validação da senha
-        if (password.value.length < 8) {
-            showError(password, 'A senha deve ter no mínimo 8 caracteres.');
-            valid = false;
-        }
-        
-        return valid;
     }
 
     /**
-     * Exibe uma mensagem de erro para um campo específico.
-     * @param {HTMLElement} inputElement - O elemento input que tem o erro.
-     * @param {string} message - A mensagem de erro a ser exibida.
+     * Função para renderizar o perfil do usuário no front-end.
+     * @param {object} user - O objeto com os dados do usuário retornado pela API.
      */
-    function showError(inputElement, message) {
-        inputElement.classList.add('is-invalid');
-        const errorElement = inputElement.nextElementSibling;
-        errorElement.textContent = message;
-    }
+    function displayUserProfile(user) {
+        // 5. Cria o HTML para exibir os dados do perfil.
+        // Usamos template literals (crases ``) para facilitar a construção do HTML.
+        const profileHTML = `
+            <div class="profile-card">
+                <img src="${user.avatar_url}" alt="Avatar de ${user.name}" class="profile-avatar">
+                <div class="profile-info">
+                    <h2>${user.name || 'Nome não disponível'}</h2>
+                    <p class="username">@${user.login}</p>
+                    <p class="bio">${user.bio || 'Nenhuma bio disponível.'}</p>
+                    <ul>
+                        <li><strong>Repositórios:</strong> ${user.public_repos}</li>
+                        <li><strong>Seguidores:</strong> ${user.followers}</li>
+                        <li><strong>Seguindo:</strong> ${user.following}</li>
+                    </ul>
+                    <a href="${user.html_url}" target="_blank" class="profile-link">Ver Perfil no GitHub</a>
+                </div>
+            </div>
+        `;
 
-    /**
-     * Limpa todas as mensagens de erro e estilos de erro dos campos.
-     */
-    function clearErrors() {
-        document.querySelectorAll('.is-invalid').forEach(el => el.classList.remove('is-invalid'));
-        document.querySelectorAll('.error-message').forEach(el => el.textContent = '');
-    }
-
-    /**
-     * Exibe uma mensagem de status global (sucesso ou erro).
-     * @param {string} message - A mensagem a ser exibida.
-     * @param {string} type - O tipo de mensagem ('success' ou 'error').
-     */
-    function showStatusMessage(message, type) {
-        formStatus.textContent = message;
-        formStatus.className = type; // Remove classes antigas e adiciona a nova.
-        formStatus.style.display = 'block';
-    }
-
-    /**
-     * SIMULAÇÃO DE UMA API DE BACK-END.
-     * Em um projeto real, aqui você faria a chamada fetch para sua URL de verdade.
-     * ex: const response = await fetch('https://sua-api.com/register', { ... });
-     * @param {object} data - Os dados do formulário a serem enviados.
-     * @returns {Promise<object>} - Uma promessa que resolve com a resposta do servidor.
-     */
-    function sendDataToServer(data) {
-        console.log('Dados enviados para o servidor:', data);
-
-        // Simula a latência da rede (1.5 segundos).
-        return new Promise((resolve, reject) => {
-            setTimeout(() => {
-                // Para testar o cenário de erro, descomente a linha abaixo.
-                // if (data.email.includes('erro@')) {
-                //     reject(new Error('Este e-mail já está cadastrado. Tente outro.'));
-                //     return;
-                // }
-
-                // Simula uma resposta de sucesso do servidor.
-                resolve({
-                    success: true,
-                    message: `Obrigado por se cadastrar, ${data.fullName}!`
-                });
-            }, 1500);
-        });
+        // Insere o HTML gerado dentro do container no front-end.
+        profileContainer.innerHTML = profileHTML;
     }
 });
